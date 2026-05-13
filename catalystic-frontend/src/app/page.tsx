@@ -132,13 +132,26 @@ function buildRecommendations(data: DashboardData): Recommendation[] {
       let score = 52;
       const catalysts = [signal.signal_type];
       const risks: string[] = [];
+      const signalType = signal.signal_type.toLowerCase();
+      const signalDescription = signal.signal_description.toLowerCase();
 
-      if (signal.signal_type.toLowerCase().includes('cluster')) {
+      if (signalType.includes('alpha vantage')) {
+        catalysts.push('Alpha Vantage market intelligence');
+        if (signalDescription.includes('positive')) {
+          score += 18;
+          catalysts.push('positive news sentiment');
+        } else if (signalDescription.includes('negative')) {
+          score -= 18;
+          risks.push('negative news sentiment');
+        }
+      }
+
+      if (signalType.includes('cluster')) {
         score += 18;
         catalysts.push('multiple insider alignment');
       }
 
-      if (signal.signal_type.toLowerCase().includes('high-value') || signal.signal_description.includes('$')) {
+      if (signalType.includes('high-value') || signal.signal_description.includes('$')) {
         score += 8;
         catalysts.push('material capital commitment');
       }
@@ -246,7 +259,7 @@ export default async function HomePage() {
                 Stock recommendations from market signals
               </h1>
               <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-                Rank insider activity alongside recent news and expert context, then turn the combined evidence into a research-ready watchlist.
+                Rank Alpha Vantage news sentiment, market activity, and analyst context into a research-ready watchlist.
               </p>
             </div>
             <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -256,7 +269,7 @@ export default async function HomePage() {
 
           <div className="grid gap-4 md:grid-cols-4">
             <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm text-slate-500">Tracked signals</p>
+              <p className="text-sm text-slate-500">Recommendation signals</p>
               <p className="mt-2 text-3xl font-bold">{data.signals.length}</p>
             </div>
             <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
@@ -334,7 +347,7 @@ export default async function HomePage() {
             <div className="rounded-md border border-slate-200 bg-white p-10 text-center shadow-sm">
               <h2 className="text-2xl font-bold text-slate-800">No recommendations yet</h2>
               <p className="mt-3 text-slate-500">
-                Run the backend ingestor and signal detector to populate insider trading signals.
+                Run the Alpha Vantage ingestor to populate news-driven recommendation signals.
               </p>
             </div>
           )}
@@ -349,15 +362,29 @@ export default async function HomePage() {
                   <div key={item.id} className="border-t border-slate-100 pt-4 first:border-t-0 first:pt-0">
                     <div className="flex items-center justify-between gap-3">
                       <span className="font-semibold">{item.ticker}</span>
-                      <span className="text-xs text-slate-500">{formatDate(item.published_at)}</span>
+                      <span className="text-xs text-slate-500">{item.sentiment ?? 'neutral'}</span>
                     </div>
-                    <p className="mt-2 text-sm font-medium text-slate-800">{item.headline}</p>
+                    {item.url ? (
+                      <a
+                        href={item.url}
+                        className="mt-2 block text-sm font-medium text-slate-800 hover:text-blue-700"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {item.headline}
+                      </a>
+                    ) : (
+                      <p className="mt-2 text-sm font-medium text-slate-800">{item.headline}</p>
+                    )}
                     {item.summary ? <p className="mt-1 text-sm text-slate-500">{item.summary}</p> : null}
+                    <p className="mt-2 text-xs text-slate-400">
+                      {item.source ?? 'Alpha Vantage'} · {formatDate(item.published_at)}
+                    </p>
                   </div>
                 ))
               ) : (
                 <p className="text-sm leading-6 text-slate-500">
-                  Add a `market_news` table to enrich recommendations with current headlines, sentiment, source, and URLs.
+                  Run the Alpha Vantage ingestor to populate current headlines, sentiment, source, and URLs.
                 </p>
               )}
             </div>
@@ -379,7 +406,7 @@ export default async function HomePage() {
                 ))
               ) : (
                 <p className="text-sm leading-6 text-slate-500">
-                  Add an `expert_notes` table for analyst ratings, investor commentary, or manually reviewed research notes.
+                  Run the Alpha Vantage ingestor to populate analyst rating context from company overview data.
                 </p>
               )}
             </div>

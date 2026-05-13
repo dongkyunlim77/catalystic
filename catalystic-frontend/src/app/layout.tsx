@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Catalystic Market Intelligence",
-  description: "A stock recommendation dashboard based on market signals, news, and expert context.",
+  description: "A stock recommendation dashboard based on Alpha Vantage news sentiment and analyst context.",
 };
 
 export default function RootLayout({

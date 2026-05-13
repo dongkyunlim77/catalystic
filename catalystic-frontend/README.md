@@ -20,7 +20,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 ```
 
-The dashboard reads the required `signals` table and optionally uses `market_news` and `expert_notes` if they exist.
+The dashboard reads `signals`, `market_news`, and `expert_notes`. These are populated by `catalystic-backend/alpha_vantage_ingestor.py`.
 
 ## Validate
 

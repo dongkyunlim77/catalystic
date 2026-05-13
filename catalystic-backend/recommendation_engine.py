@@ -96,6 +96,14 @@ def _signal_score(signal: dict) -> tuple[int, list[str]]:
     score = 50
     catalysts = []
 
+    if "alpha vantage news sentiment" in signal_type:
+        catalysts.append("Alpha Vantage news sentiment")
+        if "positive" in description:
+            score += 18
+            catalysts.append("positive market news")
+        elif "negative" in description:
+            score -= 18
+
     if "cluster buy" in signal_type:
         score += 18
         catalysts.append("multiple insider purchases")

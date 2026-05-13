@@ -1,35 +1,39 @@
 # Catalystic
 
-Catalystic is a market intelligence dashboard that turns insider trading signals, recent news context, and expert notes into transparent stock research recommendations.
+Catalystic is a market intelligence dashboard that turns Alpha Vantage news sentiment, market activity, and analyst context into transparent stock research recommendations.
 
 The platform is intentionally evidence-first: recommendations are ranked from explainable inputs instead of opaque predictions. It is a research aid, not financial advice.
 
 ## What It Does
 
-- Fetches recent SEC Form 4 open-market insider purchases.
-- Detects cluster buys when 3 or more unique insiders buy the same stock.
-- Detects high-value individual purchases over $100,000.
-- Scores each stock with signal strength, recency, news sentiment, and expert stance.
+- Fetches recent Alpha Vantage market news and ticker-level sentiment.
+- Uses Alpha Vantage company overview data to create analyst-rating context.
+- Creates recommendation signals from non-neutral news sentiment.
+- Scores each stock with signal strength, recency, news sentiment, and analyst stance.
 - Presents a ranked recommendation dashboard in Next.js.
 
 ## Architecture
 
 ```text
-SEC Form 4 data
-    -> catalystic-backend/ingestor.py
-    -> Supabase form4_filings table
-    -> catalystic-backend/signal_detector.py
+Alpha Vantage NEWS_SENTIMENT + OVERVIEW
+    -> catalystic-backend/alpha_vantage_ingestor.py
+    -> Supabase market_news + expert_notes tables
     -> Supabase signals table
     -> catalystic-backend/recommendation_engine.py
     -> catalystic-frontend dashboard
 ```
 
-Optional context tables can enrich recommendations:
+Legacy SEC insider-buy scripts are still available:
+
+- `catalystic-backend/ingestor.py`
+- `catalystic-backend/signal_detector.py`
+
+Required recommendation context tables:
 
 - `market_news`: recent ticker-level headlines and sentiment.
-- `expert_notes`: analyst, investor, or internally reviewed stock notes.
+- `expert_notes`: Alpha Vantage company overview analyst-rating notes.
 
-The frontend works with only the existing `signals` table, then uses optional context if the extra tables exist.
+The frontend reads `signals`, `market_news`, and `expert_notes`.
 
 ## Tech Stack
 
@@ -51,9 +55,19 @@ Create `catalystic-backend/.env`:
 
 ```env
 SEC_API_KEY=your_sec_api_key_here
+ALPHA_VANTAGE_API_KEY=your_alpha_vantage_api_key_here
+ALPHA_VANTAGE_TICKERS=AAPL,MSFT,NVDA,TSLA,AMZN
+ALPHA_VANTAGE_MAX_TICKERS=5
+ALPHA_VANTAGE_NEWS_PER_TICKER=5
+ALPHA_VANTAGE_FETCH_EXPERT_CONTEXT=true
+ALPHA_VANTAGE_REQUEST_INTERVAL_SECONDS=1.2
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_KEY=your_supabase_key_here
 ```
+
+`SEC_API_KEY` is only needed if you still run the legacy SEC scripts. `ALPHA_VANTAGE_TICKERS` is optional; if omitted, the Alpha Vantage ingestor uses top gainers and most active tickers from Alpha Vantage.
+
+Alpha Vantage free keys are rate limited. If you hit limits, reduce `ALPHA_VANTAGE_TICKERS`, set `ALPHA_VANTAGE_FETCH_EXPERT_CONTEXT=false`, or increase `ALPHA_VANTAGE_REQUEST_INTERVAL_SECONDS`.
 
 ### Frontend
 
@@ -99,7 +113,7 @@ CREATE TABLE public.signals (
 );
 ```
 
-Optional enrichment tables:
+Recommendation context tables:
 
 ```sql
 CREATE TABLE public.market_news (
@@ -131,6 +145,12 @@ Fetch and analyze market signals:
 
 ```bash
 source venv/bin/activate
+python catalystic-backend/alpha_vantage_ingestor.py
+```
+
+Optional legacy insider-buy flow:
+
+```bash
 python catalystic-backend/ingestor.py
 python catalystic-backend/signal_detector.py
 ```
@@ -164,9 +184,9 @@ npm run build
 
 The scoring model is rule-based and transparent:
 
-- Insider signal type and transaction strength increase conviction.
+- Alpha Vantage news sentiment is the primary signal source.
 - More recent signals score higher.
-- Positive news and bullish expert notes add support.
+- Positive news and bullish analyst context add support.
 - Negative news, bearish notes, and missing context are surfaced as risks.
 
 The score is meant to prioritize research, not automate trading decisions.

@@ -99,6 +99,32 @@ class RecommendationEngineTest(unittest.TestCase):
         self.assertEqual(recommendations[0].ticker, "NEW")
         self.assertEqual(recommendations[1].ticker, "OLD")
 
+    def test_alpha_vantage_news_signal_can_drive_recommendation(self):
+        signal = {
+            "ticker": "NEWS",
+            "signal_type": "Alpha Vantage News Sentiment",
+            "signal_date": "2026-05-12",
+            "signal_description": "Alpha Vantage news sentiment is positive for NEWS: company beats expectations.",
+        }
+        news_items = [
+            {
+                "ticker": "NEWS",
+                "headline": "NEWS beats expectations",
+                "summary": "The company announced a new partnership.",
+            }
+        ]
+
+        recommendation = build_recommendation(
+            signal,
+            news_items=news_items,
+            expert_notes=[],
+            as_of=date(2026, 5, 13),
+        )
+
+        self.assertGreaterEqual(recommendation.score, 68)
+        self.assertIn("Alpha Vantage news sentiment", recommendation.catalysts)
+        self.assertIn("positive market news", recommendation.catalysts)
+
 
 if __name__ == "__main__":
     unittest.main()
