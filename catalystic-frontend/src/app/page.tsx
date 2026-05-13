@@ -62,34 +62,60 @@ function createSupabaseClient() {
   return createClient(url, key);
 }
 
+function focusedTickers() {
+  return (process.env.NEXT_PUBLIC_FOCUS_TICKERS ?? '')
+    .split(',')
+    .map((ticker) => ticker.trim().toUpperCase())
+    .filter(Boolean);
+}
+
 async function getDashboardData(): Promise<DashboardData> {
   const supabase = createSupabaseClient();
+  const tickers = focusedTickers();
 
   if (!supabase) {
     return { signals: [], news: [], expertNotes: [] };
   }
 
-  const { data: signals, error: signalError } = await supabase
+  let signalsQuery = supabase
     .from('signals')
     .select('*')
     .order('signal_date', { ascending: false });
+
+  if (tickers.length > 0) {
+    signalsQuery = signalsQuery.in('ticker', tickers);
+  }
+
+  const { data: signals, error: signalError } = await signalsQuery;
 
   if (signalError) {
     console.error('Error fetching signals:', signalError.message);
     return { signals: [], news: [], expertNotes: [] };
   }
 
-  const { data: news, error: newsError } = await supabase
+  let newsQuery = supabase
     .from('market_news')
     .select('*')
     .order('published_at', { ascending: false })
     .limit(50);
 
-  const { data: expertNotes, error: expertError } = await supabase
+  if (tickers.length > 0) {
+    newsQuery = newsQuery.in('ticker', tickers);
+  }
+
+  const { data: news, error: newsError } = await newsQuery;
+
+  let expertNotesQuery = supabase
     .from('expert_notes')
     .select('*')
     .order('published_at', { ascending: false })
     .limit(50);
+
+  if (tickers.length > 0) {
+    expertNotesQuery = expertNotesQuery.in('ticker', tickers);
+  }
+
+  const { data: expertNotes, error: expertError } = await expertNotesQuery;
 
   if (newsError) {
     console.warn('Market news table is unavailable:', newsError.message);

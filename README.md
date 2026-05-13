@@ -69,6 +69,15 @@ SUPABASE_KEY=your_supabase_key_here
 
 Alpha Vantage free keys are rate limited. If you hit limits, reduce `ALPHA_VANTAGE_TICKERS`, set `ALPHA_VANTAGE_FETCH_EXPERT_CONTEXT=false`, or increase `ALPHA_VANTAGE_REQUEST_INTERVAL_SECONDS`.
 
+For a single-ticker focus run, configure the backend like this:
+
+```env
+ALPHA_VANTAGE_TICKERS=PLTR
+ALPHA_VANTAGE_MAX_TICKERS=1
+ALPHA_VANTAGE_NEWS_PER_TICKER=10
+ALPHA_VANTAGE_FETCH_EXPERT_CONTEXT=true
+```
+
 ### Frontend
 
 ```bash
@@ -81,6 +90,7 @@ Create `catalystic-frontend/.env.local`:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+NEXT_PUBLIC_FOCUS_TICKERS=PLTR
 ```
 
 ## Database Schema
