@@ -19,12 +19,31 @@ if not all([SUPABASE_URL, SUPABASE_KEY]):
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+SIGNAL_LOOKBACK_DAYS = 7
+HIGH_VALUE_PURCHASE_THRESHOLD = 100000
+
+def save_signal(ticker, signal_type, signal_date, description):
+    """Saves a generated signal if a matching recent signal does not exist."""
+    recent_signal_response = supabase.table('signals').select('id', count='exact').eq('ticker', ticker).eq('signal_type', signal_type).eq('signal_date', signal_date).execute()
+
+    if recent_signal_response.count == 0:
+        supabase.table('signals').insert({
+            'ticker': ticker,
+            'signal_type': signal_type,
+            'signal_date': signal_date,
+            'signal_description': description,
+            'status': 'new'
+        }).execute()
+        return True
+
+    return False
+
 def find_cluster_buys():
     """Analyzes recent filings to find and record Cluster Buy signals."""
     print("Looking for cluster buy signals...")
     
     # Get all purchase transactions from the last 7 days
-    seven_days_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+    seven_days_ago = (datetime.now() - timedelta(days=SIGNAL_LOOKBACK_DAYS)).strftime('%Y-%m-%d')
     response = supabase.table('form4_filings').select('*').eq('transaction_type', 'Purchase').gte('transaction_date', seven_days_ago).execute()
     
     if not response.data:
@@ -62,15 +81,41 @@ def find_cluster_buys():
                 description = f"{len(unique_insiders)} insiders, including {insider_preview}, purchased a combined ${total_value:,.2f} worth of stock."
                 
                 print(f"FOUND SIGNAL: Cluster Buy at {ticker}")
-                supabase.table('signals').insert({
-                    'ticker': ticker,
-                    'signal_type': 'Cluster Buy',
-                    'signal_date': datetime.now().strftime('%Y-%m-%d'),
-                    'signal_description': description,
-                    'status': 'new'
-                }).execute()
+                save_signal(ticker, 'Cluster Buy', datetime.now().strftime('%Y-%m-%d'), description)
 
     print("Finished signal detection.")
 
+def find_high_value_purchases():
+    """Analyzes recent filings to find large individual insider purchase signals."""
+    print("Looking for high-value purchase signals...")
+
+    seven_days_ago = (datetime.now() - timedelta(days=SIGNAL_LOOKBACK_DAYS)).strftime('%Y-%m-%d')
+    response = supabase.table('form4_filings').select('*').eq('transaction_type', 'Purchase').gte('transaction_date', seven_days_ago).execute()
+
+    if not response.data:
+        print("No recent purchase filings found to analyze.")
+        return
+
+    for trade in response.data:
+        ticker = trade.get('ticker')
+        if not ticker or ticker.upper() in ('NONE', 'N.A.'):
+            continue
+
+        total_value = float(trade.get('total_value') or 0)
+        if total_value < HIGH_VALUE_PURCHASE_THRESHOLD:
+            continue
+
+        signal_date = datetime.now().strftime('%Y-%m-%d')
+        description = (
+            f"{trade.get('insider_name')} ({trade.get('insider_role')}) purchased "
+            f"${total_value:,.2f} worth of stock on {trade.get('transaction_date')}."
+        )
+
+        if save_signal(ticker, 'High-Value Purchase', signal_date, description):
+            print(f"FOUND SIGNAL: High-Value Purchase at {ticker}")
+
+    print("Finished high-value purchase detection.")
+
 if __name__ == "__main__":
-    find_cluster_buys() 
+    find_cluster_buys()
+    find_high_value_purchases()
