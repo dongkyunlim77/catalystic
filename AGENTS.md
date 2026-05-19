@@ -157,6 +157,35 @@ After implementation, always report:
 7. Follow-up tickets
 8. Docs that should be updated
 
+## Session And Exit Behavior
+
+- Use one Codex CLI session per ticket.
+- For the same unfinished ticket, continue the existing Codex session when possible.
+- If the user exits accidentally or needs to return to the same ticket, they should use:
+
+```bash
+codex resume --last
+```
+
+- Use `codex resume` to pick from recent sessions.
+- Use `codex resume --all` only when the needed session may not belong to the current working directory.
+- Use a fresh `codex` session for each new ticket to reduce context drift.
+- At the end of every ticket, provide a concise completion report before the user exits.
+- The completion report must include:
+  1. Summary of changes
+  2. Files changed
+  3. Commands run
+  4. Build/test results
+  5. Manual verification steps
+  6. Risks or assumptions
+  7. Follow-up tickets
+  8. Docs that should be updated
+- Do not rely only on chat/session memory. Durable project memory should live in:
+  - `AGENTS.md`
+  - `docs/Repo_Current_State.md`
+  - `docs/Tickets.md`
+  - Git commits / PRs
+
 ## Git Safety
 
 The user should work on a branch per ticket.
