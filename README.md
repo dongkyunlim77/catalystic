@@ -41,6 +41,18 @@ The frontend reads `signals`, `market_news`, and `expert_notes`.
 - Frontend: Next.js, React, TypeScript, Tailwind CSS
 - Database: Supabase/PostgreSQL
 
+## Project Docs
+
+Additional project management and implementation context lives in `docs/`:
+
+- `docs/Product_Overview.md`
+- `docs/MVP_Technical_Design.md`
+- `docs/Repo_Current_State.md`
+- `docs/Tickets.md`
+- `docs/Manual_Verification_Guide.md`
+- `docs/Known_Issues_And_Followups.md`
+- `docs/Codex_Prompt_Playbook.md`
+
 ## Setup
 
 ### Backend
