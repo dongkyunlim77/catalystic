@@ -104,7 +104,7 @@ Important tables:
 
 ## Completed Codex Tickets
 
-None tracked yet under the Codex manager workflow.
+- T0001 — Added Codex manager docs and environment example files.
 
 ## Current Known Risks
 
@@ -117,4 +117,4 @@ None tracked yet under the Codex manager workflow.
 
 ## Recommended Next Ticket
 
-T0001 — Add Codex manager docs and environment examples.
+T0002 — Improve Recommendation Engine Tests.
