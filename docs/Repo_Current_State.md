@@ -1,6 +1,6 @@
 # Repo Current State
 
-Last updated: 2026-05-18
+Last updated: 2026-05-27
 
 ## Repository
 
@@ -89,6 +89,14 @@ npm run lint
 npm run build
 ```
 
+Current dashboard behavior:
+
+- Displays ranked stock discovery candidates from Supabase `signals`.
+- Derives frontend-only score, confidence, and freshness labels from stored signals, market news, and expert notes.
+- Shows supporting market news, sentiment context, expert/analyst context, risk factors, and signal dates.
+- Includes loading, empty, and error states for the main dashboard.
+- Uses research-aid language and avoids direct financial advice wording.
+
 ## Database
 
 Provider:
@@ -105,10 +113,12 @@ Important tables:
 ## Completed Codex Tickets
 
 - T0001 — Added Codex manager docs and environment example files.
+- T0003 — Improved the frontend stock discovery dashboard with ranked recommendation cards, supporting evidence, risk context, confidence/freshness labels, and loading/empty/error states.
 
 ## Current Known Risks
 
 - Alpha Vantage free keys are rate limited.
+- Alpha Vantage automatic ticker discovery can return low-quality symbols such as warrants or rights, and `OVERVIEW` analyst fields can contain placeholder values like `-`.
 - SEC insider-buy scripts appear to be legacy and should not be treated as the primary product unless intentionally revived.
 - Frontend relies on Supabase environment variables.
 - Backend relies on Supabase and Alpha Vantage environment variables.
@@ -117,4 +127,6 @@ Important tables:
 
 ## Recommended Next Ticket
 
-T0002 — Improve Recommendation Engine Tests.
+T0004 — Add Demo Data Mode For Frontend.
+
+Also recommended: add a backend reliability ticket to make Alpha Vantage automatic discovery filter out low-quality symbols and handle placeholder analyst values gracefully.

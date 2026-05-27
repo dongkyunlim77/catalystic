@@ -130,16 +130,18 @@ Review test names and confirm each test describes a product-relevant behavior.
 
 ---
 
-# T0003 — Add Frontend Empty, Loading, And Error States
+# T0003 — Improve Stock Discovery Dashboard Frontend
+
+Status: Completed on `feature/t0003-improve-discovery-dashboard`.
 
 ## Goal
 
-Improve dashboard reliability by making the frontend handle empty Supabase results, loading state, and failed reads clearly.
+Improve the frontend experience for displaying ranked stock recommendations so users can quickly understand which stocks are research-worthy candidates, why they ranked, what evidence supports them, what risks or missing context exist, and how fresh/confident each signal is.
 
 ## Branch
 
 ```text
-feature/t0003-dashboard-states
+feature/t0003-improve-discovery-dashboard
 ```
 
 ## Allowed Areas
@@ -155,11 +157,21 @@ feature/t0003-dashboard-states
 
 ## Requirements
 
-1. Show a clear loading state while data is being fetched.
-2. Show a clear empty state when no signals exist.
-3. Show a clear error state when Supabase reads fail.
-4. Keep the UI professional and simple.
-5. Avoid financial-advice wording.
+1. Improve the dashboard layout so it feels like a stock discovery dashboard rather than a raw table/list.
+2. Display ranked recommendation cards with rank, ticker, category, score, confidence, freshness, explanation, and risk or missing-context note.
+3. Add a clear "Top Research Candidates" section.
+4. Show supporting market news, sentiment context, expert/analyst context, risk factors, and signal dates where data is available.
+5. Add loading, empty, and error states.
+6. Keep the existing Next.js, TypeScript, and Tailwind setup.
+7. Preserve compatibility with the current Supabase data model.
+8. Avoid financial-advice wording.
+
+## Implementation Notes
+
+- Added frontend-only score, confidence, and freshness labels derived from existing `signals`, `market_news`, and `expert_notes` rows.
+- Added expandable evidence sections for each ranked candidate.
+- Added `loading.tsx` and `error.tsx` route states.
+- Did not modify backend implementation files, database schema, environment files, package files, or recommendation engine logic.
 
 ## Acceptance Criteria
 
@@ -181,6 +193,34 @@ npm run dev
 ```
 
 Open `http://localhost:3000` and verify dashboard behavior.
+
+---
+
+# Follow-up — Improve Alpha Vantage Auto-Discovery Reliability
+
+## Goal
+
+Make backend automatic ticker discovery more robust when `ALPHA_VANTAGE_TICKERS` is empty.
+
+## Suggested Allowed Areas
+
+- `catalystic-backend/alpha_vantage_ingestor.py`
+- `catalystic-backend/tests/`
+
+## Suggested Requirements
+
+1. Filter out low-quality automatically discovered symbols such as warrants or rights when possible.
+2. Handle Alpha Vantage `OVERVIEW` placeholder analyst values such as `-`, `None`, empty strings, or missing fields without crashing.
+3. Gracefully skip expert notes when overview data is incomplete.
+4. Add focused backend tests for placeholder analyst rating values.
+
+## Suggested Acceptance Criteria
+
+```bash
+python -m unittest discover catalystic-backend/tests
+```
+
+passes.
 
 ---
 
